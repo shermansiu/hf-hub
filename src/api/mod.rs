@@ -3,6 +3,11 @@ use std::{collections::VecDeque, time::Duration};
 use indicatif::{style::ProgressTracker, HumanBytes, ProgressBar, ProgressStyle};
 use serde::Deserialize;
 
+#[cfg(target_arch = "wasm32")]
+use web_time::{Instant};
+#[cfg(not(target_arch = "wasm32"))]
+use std::time::{Instant};
+
 /// The asynchronous version of the API
 #[cfg(feature = "tokio")]
 pub mod tokio;
@@ -78,7 +83,7 @@ pub struct RepoInfo {
 
 #[derive(Clone, Default)]
 struct MovingAvgRate {
-    samples: VecDeque<(std::time::Instant, u64)>,
+    samples: VecDeque<(Instant, u64)>,
 }
 
 impl ProgressTracker for MovingAvgRate {
@@ -86,7 +91,7 @@ impl ProgressTracker for MovingAvgRate {
         Box::new(self.clone())
     }
 
-    fn tick(&mut self, state: &indicatif::ProgressState, now: std::time::Instant) {
+    fn tick(&mut self, state: &indicatif::ProgressState, now: Instant) {
         // sample at most every 20ms
         if self
             .samples
@@ -105,7 +110,7 @@ impl ProgressTracker for MovingAvgRate {
         }
     }
 
-    fn reset(&mut self, _state: &indicatif::ProgressState, _now: std::time::Instant) {
+    fn reset(&mut self, _state: &indicatif::ProgressState, _now: Instant) {
         self.samples = Default::default();
     }
 
